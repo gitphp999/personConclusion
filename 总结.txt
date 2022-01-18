@@ -1,0 +1,413 @@
+MySQL 查询重复数据，删除重复数据保留id最小的一条作为唯一数据：
+
+DELETE 
+FROM
+	`t_drug` 
+WHERE
+	`name` IN ( SELECT `name` FROM (SELECT name FROM t_drug GROUP BY name HAVING COUNT(name)>1) e )
+	AND id NOT IN ( SELECT `id` FROM (SELECT MIN(Id) AS Id FROM t_drug GROUP BY name HAVING COUNT(name)>1) t )
+	
+	//tp5 使用下面代码隐藏错误未生效 待解决
+	
+	error_reporting(0);
+	ini_set('display_errors','on');
+	try  {
+		$res = @eval("if ($v){dump('异常');exit();}");
+		if (!$res){
+			throw new Exception('报错');
+		}
+	} catch(\Exception $e) {
+		dump($e->getMessage());exit();
+	}
+	ini_set('display_errors','off');
+	
+	UPDATE `health_tjyy`.`t_drug` SET `spell_code` = concat(id,'_',type)
+	WHERE `type` = 'drug';
+
+定时任务学习：
+
+step=5
+
+for((i=0; i<60;i=(i+step)));
+do
+echo 123
+curl http://10.128.191.63:8888/wap/v1/data/getLastTj?hospital_code=GdidSffxenCb2J4aFrdS/Q==
+sleep $step
+done
+exit 0
+
+
+
+step=2
+
+for((i=0; i<60;i=(i+step)));do
+$(php '/root/siqi/testcrontab.php')
+sleep $step
+done
+exit 0
+
+
+testcrontab.php：
+
+<?php
+file_put_contents('/root/siqi/run.log'.date('Y-m-d H:i:s')."\r\n",FILE_APPEND);
+?>
+
+
+nest学习：
+
+npm i /npm install //安装依赖
+
+npm start  //启动服务
+
+npm run start:dev // 修改服务实时重启
+
+yarn config set registry https://registry.npm.taobao.org  //下载yarn
+
+npm run start:debug	//开启debug模式
+
+yarn migration:generate //生成sql语句
+
+yarn migration:run //执行sql语句
+
+
+typeorm:
+
+	//联表查询
+	user = await doctorRepository
+    .createQueryBuilder('doctor')
+    .leftJoinAndSelect("s_department", "d",'d.id=doctor.department_id')
+    .select('doctor.id as doctor_id,doctor.department_id,doctor.username,doctor.phone,doctor.email,doctor.address,doctor.sex,doctor.role_id')
+    .getRawOne();
+	
+	//将子表实体关联新增到主表字段
+	result = await packageRepository
+			.createQueryBuilder('p')
+			.leftJoinAndMapMany("p.ids","c_physical_exam_package_question", "pq",'pq.package_id=p.id',{"id"})
+			.getMany();
+	
+	//使用 Query Builder 查询
+	let user = await doctorRepository
+    .createQueryBuilder("doctor")
+    .where("doctor.username = :username", { username: username })
+    .andWhere("doctor.password = :password", { password: password })
+    .select("doctor.id as doctor_id")
+    .getOne();
+	
+	//采用map结构循环遍历questionnaireIdArr数组
+	let questionnaireData = questionnaireIdArr.map(e => {
+      return {
+        "questionnaire_id": e,
+        "package_id": insertResult['id'],
+      }
+    })
+	
+	
+	
+	typescript:
+	
+	split() 方法用于把一个字符串分割成字符串数组。
+	
+	注释：如果把空字符串 ("") 用作 separator，那么 stringObject 中的每个字符之间都会被分割。
+
+	注释：String.split() 执行的操作与 Array.join 执行的操作是相反的。
+	
+	nodejs 无限极分类获取数据：
+	
+		function tree(data) {
+			var map = {};
+			data.forEach(function (item) {
+				map[item.id] = item;       //这里的ID根据数据库的字段
+			});	
+			//console.log(map)
+			var val = [];
+			data.forEach(function (item) {
+				var parent = map[item.pid];      //这里是父级ID---pid
+				if (parent) {
+					(parent.children || (parent.children = [])).push(item);
+				} else {
+					val.push(item);
+				}
+			});
+			return val;
+		}
+		
+		main(arr, pid: string) {
+			const temp = [];
+			for (const item of arr) {
+			  if (item.parent_id === pid) {
+				item.children = this.main(arr, item.id);
+				temp.push(item);
+			  }
+			}
+			return temp;
+		}
+		
+		//遍历数组
+		//Array#forEach给回调函数传3个参数：数组元素，索引和整个数组
+		let items = [1, 2, 3];
+		items.forEach((item) => console.log(item));
+		
+		let packageId = result.map(e => e.id);
+		const packageQuestionRepository = getConnection(hospitalCode).getRepository(PhysicalExamPackageQuestion);
+		let packageQuestionResult = await packageQuestionRepository.find({
+		  select: ["package_id", "questionnaire_id"],
+		  where: { package_id: In(packageId) }
+		});
+		let packageQuestionResultMap = {};
+		packageQuestionResult.forEach(function (item) {
+		  if (packageQuestionResultMap[item.package_id]) {
+			packageQuestionResultMap[item.package_id].push(item)
+		  } else {
+			packageQuestionResultMap[item.package_id] = [item]
+		  }
+		});
+		let questionnaireIds = packageQuestionResult.map(e => e.questionnaire_id);
+		const questionnaireRepository = getConnection(hospitalCode).getRepository(Questionnaire);
+		console.log(questionnaireIds);
+		
+		delete item.created_at; // 删除对象元素
+		
+		let where:{
+			questionnaire_code?: FindOperator<string>,
+			archives_id:string
+		} = {
+			archives_id:archivesId,
+		};
+		
+		//数组去重
+		// updateRecordList[item.physical_exam_no].combineData = Array.from(new Set(updateRecordList[item.physical_exam_no].combineData))
+		
+		// 测试医院
+  TypeOrmModule.forRootAsync({
+    name: "hospital_xxx",
+    imports: [ConfigModule],
+    useFactory: (config: ConfigService) => {
+      let database = config.get('database')
+      return {
+        ...database,
+        database: "hospital_xxx",
+        synchronize: true,//同步数据库
+        // logging: true,
+        entities: ["dist/src/entity/sub-hospital/**/*.entity.js", "dist/src/entity/sub-hospital/*.entity.js"],
+      }
+    },
+    inject: [ConfigService],
+  })
+	
+	git 操作命令：
+	
+		git branch 查看本地分支	星号(*)表示当前所在分支
+		
+		git checkout master	切换分支
+		
+		git checkout -b dbg_lichen_star	创建新分支并立即切换到该分支下，从而在该分支中操作
+		
+		git push origin dbg_lichen_star:dbg_lichen_star	新建的本地分支push到远程服务器，远程分支与本地分支同名（当然可以随意起名）
+	
+		git branch -a 查看所有分支
+		
+		git remote add origin git@git.ywtjxt.com:linwy/TN_Checkup_Api_Child.git  添加分支
+		
+		git remote remove remotes/origin/master  删除分支
+		
+		git remote remove origin  删除所有远程分支
+		
+		git pull origin master	//直接指定远程master
+		
+		git pull origin dev	指定远程dev分支拉取
+		
+		git branch --set-upstream-to=origin/master master	git pull	//先指定本地master到远程的master，然后再去pull
+		
+		
+		nginx:
+		
+			设置允许访问下一级
+			
+			location /file {
+				autoindex on;
+				alias /data/nginx/file;
+			}
+		
+		
+		mysql:
+
+			linux导出数据表到文件：
+	
+				mysqldump -u root -p hospital_ptlqyy o_abnormal_diagnostic_condition o_physical_exam_abnormal_category o_physical_exam_combination o_physical_exam_result_template  > s.sql
+		
+		
+		
+	
+	
+	PS E:\project\TN-Checkup-Old> git add .
+PS E:\project\TN-Checkup-Old> git cz
+cz-cli@4.2.3, cz-conventional-changelog@3.3.0
+
+? Select the type of change that you're committing: fix:      A bug fix
+? What is the scope of this change (e.g. component or file name): (press enter to skip)
+? Write a short, imperative tense description of the change (max 95 chars):
+ (18) 修改打印中医指导基本是未打印的bug
+? Provide a longer description of the change: (press enter to skip)
+
+? Are there any breaking changes? No
+? Does this change affect any open issues? No
+[master d651aab] fix: 修改打印中医指导基本是未打印的bug
+ 1 file changed, 24 insertions(+), 14 deletions(-)
+	
+	
+	
+	初始化node项目：
+	
+	PS C:\Users\admin\Desktop\aaa> npm init
+This utility will walk you through creating a package.json file.
+It only covers the most common items, and tries to guess sensible defaults.
+
+See `npm help json` for definitive documentation on these fields
+and exactly what they do.
+
+Use `npm install <pkg>` afterwards to install a package and
+save it as a dependency in the package.json file.
+
+Press ^C at any time to quit.
+package name: (aaa)
+version: (1.0.0)
+description:
+entry point: (index.js)
+test command:
+git repository:
+keywords:
+author:
+license: (ISC)
+About to write to C:\Users\admin\Desktop\aaa\package.json:
+
+{
+  "name": "aaa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
+
+
+Is this OK? (yes) yes
+PS C:\Users\admin\Desktop\aaa> node index.js
+PS C:\Users\admin\Desktop\aaa>
+
+npm i pm2 -g //安装pm2插件 -g表示全局
+
+npm config get prefix //查看npm默认全局安装目录
+
+package.json文件：
+
+	"scripts":{}//执行的脚本命令
+
+	注意："scripts":{"pre-release": "standard-version -p"} 涉及模块的脚本命令，从文档获取脚本命令，
+	
+		  查看模块命令使用(npx 模块名 -h(显示帮助信息(显示改模块下的所有命令)) 其中npx是显示node_modules下面的该模块的命令)命令
+		  
+		  例如：npx standard-version -h
+
+git项目搭建与维护：
+
+	1、在git上创建一个仓库、设置仓库名称、仓库描述
+	
+	初始化项目：
+	
+	2、git init初始化项目（如果是从git项目复制过来的，删掉.git文件夹一般是隐藏的，勾选显示隐藏删掉即可）
+	
+	3、git add . 添加项目到暂存区
+	
+	4、git commit -m "first commit" 提交项目
+	
+	5、git remote add origin git@git.ywtjxt.com:guisq/sxsjcjsc.git	添加远程分支即创建仓库生成的分支
+	
+	6、git push -u origin master 推送到远程
+	
+	2-6步骤在创建仓库就会生成步骤提示你怎么初始化项目
+	
+	后续更新项目：
+	
+	7、git add . 添加项目到暂存区
+	
+	8、git commit -m "更新内容" 提交项目
+	
+	9、git push
+	
+	
+	git remote set-url origin git@git.ywtjxt.com:YW-Developer-Api/TN-Checkup-Old.git//重新设置远程地址
+	
+	
+	
+	linux项目管理：
+	
+		
+	less http-2021-06-22.log |grep login   查看文件日志 grep根据查询条件查询 |管道符表示并且
+	
+	
+
+
+
+
+	老人体检系统部署测试环境：
+	
+		1、先拉取代码
+		
+		2、yarn pre-release (运行 pre-release)
+		
+		3、推送
+		
+		4、测试服务器点击构建或者yarn go (运行 go)
+		
+		
+
+	
+docker搭建项目：
+
+	docker build -t test-pro:1.0 .  //通过dockfile创建镜像 -t表示添加标签 .表示当前目录
+
+	两种创建容器方法：
+
+		1、docker run -d -p 30000:30000 --name testDocker  test-pro:1.0//-d表示后台运行 -p表示端口映射 --name表示容器命名  test-pro:1.0表示指定镜像
+		
+		2、通过compose管理容器：
+		
+			2.1 docker-compose文件添加以下内容 例如：
+				
+				version: "3.3"//compose的版本
+				services:
+				  testDoc:
+					image: test-pro:1.0	//指定镜像
+					container_name: testDoc	//设置容器名称
+					network_mode: host	//网络模式
+					restart: always	//启动方式	always表示容器总是重新启动
+					
+			2.2 执行命令创建或更新容器：docker-compose up -d
+			
+			
+	docker命令：		
+			
+	docker images	//列出镜像
+
+	docker exec -it testDocker sh	//进入容器 -it表示交互 sh表示终端的一种类型 像mysql容器就用bash 作为另一种终端类型
+
+	docker ps	//	列车正在运行的容器
+
+	docker ps -a	//列出所有容器
+
+	docker stop 982415	//停止容器	982415表示容器id时可以写一部分来模糊删除 也可以表示容器名称
+
+	docker rm 982415	//删除容器
+
+	linux命令：
+
+		find / -name docker-compose.yml	//根据名字查找文件
+
+		history	//历史输入命令
+
+
+
